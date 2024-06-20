@@ -1,6 +1,6 @@
 services:
   wso2mi:
-    image: wso2mi:4.2.0-alpine
+    image: cristianndan14/wso2mi:4.2.0-alpine
     ports:
       - "8290:8290"
       - "8253:8253"
