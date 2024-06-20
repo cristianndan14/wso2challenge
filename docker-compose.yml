@@ -6,3 +6,4 @@ services:
       - "8253:8253"
     volumes:
       - ./mi-entrypoint.sh:/home/wso2carbon/docker-entrypoint.sh:ro
+      - ./integration:/home/wso2carbon/wso2mi-4.2.0/repository/deployment/server/synapse-configs/default
