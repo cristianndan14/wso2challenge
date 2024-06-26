@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<proxy name="feriadosProxyService" startOnLoad="true" transports="http https" xmlns="http://ws.apache.org/ns/synapse">
+    <target>
+        <inSequence>
+            <sequence key="feriadosSecuence"/>
+        </inSequence>
+        <outSequence>
+            <!--  Itera los elementos cambiando su estructura base a una nueva segun los argumentos -->
+            <foreach expression="json-eval($)" id="foreach_1">
+                <sequence>
+                    <payloadFactory media-type="json">
+                        <format>
+                            {
+                                "nombreFeriado": "$1",
+                                "fecha": "$2",
+                                "tipo": "$3",
+                                "descripcion": "$4"
+                            }
+                        </format>
+                        <args>
+                            <arg evaluator="json" expression="$.name_day"/>
+                            <arg evaluator="json" expression="$.fecha"/>
+                            <arg evaluator="json" expression="$.tipo"/>
+                            <arg evaluator="json" expression="$.comentarios"/>
+                        </args>
+                    </payloadFactory>
+                    <log level="full">
+                        <property expression="json-eval($.nombreFeriado)" name="Nombre Feriado"/>
+                        <property expression="json-eval($.fecha)" name="Fecha"/>
+                        <property expression="json-eval($.tipo)" name="Tipo"/>
+                        <property expression="json-eval($.descripcion)" name="Descripcion"/>
+                    </log>
+                    <dbreport>
+                        <connection>
+                            <pool>
+                                <driver>com.mysql.cj.jdbc.Driver</driver>
+                                <url>jdbc:mysql://mysqldb:3306/test</url>
+                                <user>root</user>
+                                <password>root</password>
+                            </pool>
+                        </connection>
+                        <statement>
+                            <sql><![CDATA[insert into DAYOFFS (name_day, fecha, tipo, descripcion) values (?, ?, ?, ?)]]></sql>
+                            <parameter expression="//nombreFeriado/child::text()" type="VARCHAR"/>
+                            <parameter expression="//fecha/child::text()" type="VARCHAR"/>
+                            <parameter expression="//tipo/child::text()" type="VARCHAR"/>
+                            <parameter expression="//comentarios/child::text()" type="VARCHAR"/>
+                        </statement>
+                    </dbreport>
+                </sequence>
+            </foreach>
+            <send/>
+        </outSequence>
+        <faultSequence/>
+    </target>
+</proxy>

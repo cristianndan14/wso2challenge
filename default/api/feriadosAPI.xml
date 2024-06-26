@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api context="/api" name="FeriadoAPI" xmlns="http://ws.apache.org/ns/synapse">
+    <resource methods="GET" uri-template="/esFeriado/{fecha}">
+        <inSequence>
+            <!-- Extraer la fecha de la URL -->
+            <property expression="get-property('uri.var.fecha')" name="fecha" scope="default" type="STRING"/>
+            <!-- Registrar la fecha recibida -->
+            <log level="full">
+                <property expression="get-property('fecha')" name="Fecha Recibida"/>
+            </log>
+            <!-- Consulta a la base de datos para verificar si la fecha es un feriado -->
+            <dblookup>
+                <connection>
+                    <pool>
+                        <driver>com.mysql.jdbc.Driver</driver>
+                        <url>jdbc:mysql://localhost:3306/test</url>
+                        <user>prueba</user>
+                        <password>prueba</password>
+                    </pool>
+                </connection>
+                <statement>
+                    <sql><![CDATA[SELECT name_day FROM DAYOFFS WHERE fecha = ?]]></sql>
+                    <parameter expression="get-property('fecha')" type="VARCHAR"/>
+                    <result column="name_day" name="nombreFeriado"/>
+                </statement>
+            </dblookup>
+            <!-- Evaluar el resultado y establecer la respuesta -->
+            <filter xpath="get-property('nombreFeriado') != ''">
+                <then>
+                    <payloadFactory media-type="json">
+                        <format>
+                            {
+                                "mensaje": "El día es un feriado"
+                            }
+                        </format>
+                        <args/>
+                    </payloadFactory>
+                    <respond/>
+                </then>
+                <else>
+                    <payloadFactory media-type="json">
+                        <format>
+                            {
+                                "mensaje": "El día no es un feriado"
+                            }
+                        </format>
+                        <args/>
+                    </payloadFactory>
+                    <property name="HTTP_SC" scope="axis2" type="STRING" value="404"/>
+                    <respond/>
+                </else>
+            </filter>
+        </inSequence>
+        <outSequence/>
+        <faultSequence/>
+    </resource>
+</api>

@@ -1,9 +1,35 @@
 services:
-  wso2mi:
-    image: cristianndan14/wso2mi:4.2.0-alpine
+  wso2-micro:
+    image: wso2/wso2mi:latest
+    container_name: wso2-micro
     ports:
       - "8290:8290"
       - "8253:8253"
+      - "9164:9164"
+    depends_on:
+      - mysqldb
     volumes:
-      - ./mi-entrypoint.sh:/home/wso2carbon/docker-entrypoint.sh:ro
-      - ./integration:/home/wso2carbon/wso2mi-4.2.0/repository/deployment/server/synapse-configs/default
+      - ./default:/home/wso2carbon/wso2mi-4.0.0/repository/deployment/server/synapse-configs/default
+      - ./conf/deployment.toml:/home/wso2carbon/wso2mi-4.0.0/conf/deployment.toml
+      - ./mysql-connector-j-8.3.0.jar:/home/wso2carbon/wso2mi-4.0.0/lib/mysql-connector-java-8.0.32.jar
+    networks:
+      - wso2micro-network
+
+  mysqldb:
+    image: mysql:8.0
+    container_name: mysqldb
+    ports:
+      - "8066:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysqldb_vol:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - wso2micro-network
+
+networks:     
+  wso2micro-network:
+
+volumes:
+  mysqldb_vol:
